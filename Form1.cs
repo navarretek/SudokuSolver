@@ -12,14 +12,16 @@ namespace SudokuSolver
 {
     public partial class Form1 : Form
     {
-        public static DataGenerator dg;
+        public DataGenerator dg;
+        string sSelectedFile;
+
 
         public Form1()
         {
             InitializeComponent();
             dg = new DataGenerator();
             DisplayBoard(dg);
-            
+            pictureBox1.Image = dg.ResizeBitmap(dg.image, pictureBox1.Width, pictureBox1.Height);
             
         }
         public bool SolveBoardBT(DataGenerator dg)
@@ -38,6 +40,7 @@ namespace SudokuSolver
                         //sets the answer to the box
                         //       row     column
                         dg.Cells[find[0], find[1]] = i;
+                        DisplayBoard(dg);
                         // continue to next iteration of this method.. next box
                         if (SolveBoardBT(dg)) return true;
                         // if return false, it backtracked so need to reset back to 0
@@ -49,6 +52,16 @@ namespace SudokuSolver
                 //if no more answers are valid 
                 return false;
             }
+        }
+        public Bitmap ResizeBitmap(Bitmap bmp, int width, int height)
+        {
+            Bitmap result = new Bitmap(width, height);
+            using (Graphics g = Graphics.FromImage(result))
+            {
+                g.DrawImage(bmp, 0, 0, width, height);
+            }
+
+            return result;
         }
 
         public bool valid(DataGenerator dg, int num, int[] pos)
@@ -77,11 +90,12 @@ namespace SudokuSolver
         }
         public void DisplayBoard(DataGenerator dg)
         {
+            
             string board = "";
             int height = dg.Cells.GetLength(0);
             int width = dg.Cells.GetLength(1);
 
-            for (int i = 0; i < height;i++)
+            for (int i = 0; i < height; i++)
             {
                 if (i % 3 == 0 && i != 0) board += "-----------------------------" + "\n";
                 for (int j = 0; j < width; j++)
@@ -89,10 +103,12 @@ namespace SudokuSolver
                     if (j % 3 == 0 && j != 0) board += " | ";
                     if (dg.Cells[i, j] == 0 && j == 8) board += dg.Cells[i, j].ToString().Replace('0', '_') + "\n";
                     else if (j == 8) board += dg.Cells[i, j] + "\n";
-                    else if (dg.Cells[i, j] == 0 ) board += dg.Cells[i, j].ToString().Replace('0', '_') + " ";
+                    else if (dg.Cells[i, j] == 0) board += dg.Cells[i, j].ToString().Replace('0', '_') + " ";
                     else board += dg.Cells[i, j] + " ";
                 }
             }
+
+
             display.Text = board;
         }
 
@@ -113,8 +129,43 @@ namespace SudokuSolver
 
         private void Solve_Click(object sender, EventArgs e)
         {
-            var s = SolveBoardBT(dg);
+            SolveBoardBT(dg);
             DisplayBoard(dg);
         }
+
+        private void Browse_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog choofdlog = new OpenFileDialog();
+            choofdlog.Filter = "All Files (*.*)|*.*";
+            choofdlog.FilterIndex = 1;
+            choofdlog.Multiselect = false;
+
+            if (choofdlog.ShowDialog() == DialogResult.OK)
+                sSelectedFile = choofdlog.FileName;
+            else
+                sSelectedFile = string.Empty;
+
+            FileName.Text = sSelectedFile;
+        }
+
+        private void DisplayBtn_Click(object sender, EventArgs e)
+        {
+
+            if(FileName.Text.Length == 0)
+            {
+                FilePathErrorLbl.Visible = true;
+            }
+            else
+            {
+                FilePathErrorLbl.Visible = false;
+                dg = new DataGenerator(FileName.Text);
+                DisplayBoard(dg);
+                pictureBox1.Image = dg.image;
+            }
+            
+
+        }
+
+  
     }
 }
